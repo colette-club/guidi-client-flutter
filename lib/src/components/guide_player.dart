@@ -37,7 +37,7 @@ class GuidePlayer {
   final int stepOffset;
 
   final VoidCallback? onGroupFinished;
-  final VoidCallback? onSkip;
+  final void Function(int completedSteps)? onSkip;
 
   /// Called when the user taps Next on a step that has [GuideStep.tapThrough].
   /// The tutorial is dismissed; the caller should run the interactive action
@@ -53,6 +53,7 @@ class GuidePlayer {
   late TutorialCoachMark _tutorialCoachMark;
   bool _tapThroughFired = false;
   bool _skipFired = false;
+  int _currentStepIndex = 0;
 
   GuidePlayer({
     required this.context,
@@ -96,6 +97,9 @@ class GuidePlayer {
       return false;
     }
 
+    final groupStepOffset = guide.stepOffsetForGroup(groupIndex);
+    _currentStepIndex = groupStepOffset + stepOffset;
+
     final targets = stepsToShow.asMap().entries.map((entry) {
       final visibleIndex = entry.key;
       final step = entry.value.value;
@@ -123,6 +127,7 @@ class GuidePlayer {
                   onTapThrough!(stepOffset + visibleIndex);
                   return;
                 }
+                _currentStepIndex = groupStepOffset + stepOffset + visibleIndex + 1;
                 _tutorialCoachMark.next();
                 // Scroll to next target after overlay animation
                 if (visibleIndex + 1 < stepsToShow.length) {
@@ -163,7 +168,7 @@ class GuidePlayer {
       },
       onSkip: () {
         _skipFired = true;
-        onSkip?.call();
+        onSkip?.call(_currentStepIndex);
         return true;
       },
     );
