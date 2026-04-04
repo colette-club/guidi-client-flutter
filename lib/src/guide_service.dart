@@ -24,6 +24,7 @@ class GuideService {
       _cachedState = null;
     }
     _userId = userId;
+    _ensureState();
   }
 
   Future<void> _ensureState() async {
