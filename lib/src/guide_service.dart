@@ -44,7 +44,13 @@ class GuideService {
   }
 
   Future<void> markGuideSeen(String guideId, {required int completedSteps, required int totalSteps, required bool skipped}) async {
-    if (_userId == null) return;
+    // ignore: avoid_print
+    print('[GuideService] markGuideSeen called: userId=$_userId, guideId=$guideId, completedSteps=$completedSteps, totalSteps=$totalSteps, skipped=$skipped');
+    if (_userId == null) {
+      // ignore: avoid_print
+      print('[GuideService] markGuideSeen aborted: userId is null');
+      return;
+    }
     try {
       _cachedState = await _client.markGuideSeen(
         userId: _userId!,
