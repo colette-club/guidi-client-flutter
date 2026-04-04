@@ -30,9 +30,13 @@ class GuideService {
     } catch (_) {}
   }
 
+  /// Whether the backend state has been successfully loaded.
+  bool get isReady => _cachedState != null;
+
   Future<bool> hasSeenGuide(String guideId) async {
     await _ensureState();
-    return _cachedState?.hasSeen(guideId) ?? false;
+    if (_cachedState == null) return true;
+    return _cachedState!.hasSeen(guideId);
   }
 
   Future<void> markGuideSeen(String guideId, {required int completedSteps, required int totalSteps, required bool skipped}) async {
