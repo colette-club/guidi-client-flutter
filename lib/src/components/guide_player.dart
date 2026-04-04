@@ -144,8 +144,6 @@ class GuidePlayer {
                 }
               },
               onSkip: () {
-                // ignore: avoid_print
-                print('[GuidePlayer] tooltip skip tapped at step $_currentStepIndex');
                 _tutorialCoachMark.skip();
               },
             ),
@@ -169,8 +167,6 @@ class GuidePlayer {
         onGroupFinished?.call();
       },
       onSkip: () {
-        // ignore: avoid_print
-        print('[GuidePlayer] TutorialCoachMark onSkip fired, _currentStepIndex=$_currentStepIndex');
         _skipFired = true;
         onSkip?.call(_currentStepIndex);
         return true;

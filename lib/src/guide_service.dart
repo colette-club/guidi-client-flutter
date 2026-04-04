@@ -31,12 +31,7 @@ class GuideService {
     if (_cachedState != null || _userId == null) return;
     try {
       _cachedState = await _client.getGuideState(_userId!);
-      // ignore: avoid_print
-      print('[GuideService] fetched state for $_userId: ${_cachedState?.guides.length} guides');
-    } catch (e) {
-      // ignore: avoid_print
-      print('[GuideService] _ensureState error: $e');
-    }
+    } catch (_) {}
   }
 
   Future<bool> hasSeenGuide(String guideId) async {
@@ -45,13 +40,7 @@ class GuideService {
   }
 
   Future<void> markGuideSeen(String guideId, {required int completedSteps, required int totalSteps, required bool skipped}) async {
-    // ignore: avoid_print
-    print('[GuideService] markGuideSeen called: userId=$_userId, guideId=$guideId, completedSteps=$completedSteps, totalSteps=$totalSteps, skipped=$skipped');
-    if (_userId == null) {
-      // ignore: avoid_print
-      print('[GuideService] markGuideSeen aborted: userId is null');
-      return;
-    }
+    if (_userId == null) return;
     try {
       _cachedState = await _client.markGuideSeen(
         userId: _userId!,
@@ -60,10 +49,7 @@ class GuideService {
         totalSteps: totalSteps,
         skipped: skipped,
       );
-    } catch (e) {
-      // ignore: avoid_print
-      print('[GuideService] markGuideSeen error: $e');
-    }
+    } catch (_) {}
   }
 
   Future<void> resetGuide(String guideId) async {
