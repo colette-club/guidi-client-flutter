@@ -1,9 +1,9 @@
 import 'dart:convert';
 
+import 'package:flutter_test/flutter_test.dart';
 import 'package:guidi_client/guidi_client.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-import 'package:test/test.dart';
 
 void main() {
   const apiUrl = 'https://guidi.example.com/api/graphql';
