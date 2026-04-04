@@ -20,6 +20,9 @@ class GuideService {
   List<Guide> get guides => _guides;
 
   void setUserId(String userId) {
+    if (_userId != userId) {
+      _cachedState = null;
+    }
     _userId = userId;
   }
 
