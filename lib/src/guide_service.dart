@@ -1,12 +1,8 @@
-import 'package:shared_preferences/shared_preferences.dart';
-
 import 'guidi_client.dart';
 import 'models/guide.dart';
 import 'models/guide_state.dart';
 
 class GuideService {
-  static const String _isNewUserKey = 'guide_is_new_user';
-
   final GuidiClient _client;
   final List<Guide> _guides;
   String? _userId;
@@ -66,27 +62,6 @@ class GuideService {
     } catch (_) {}
   }
 
-  Future<void> markAsNewUser() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_isNewUserKey, true);
-  }
-
-  Future<bool> isNewUser() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_isNewUserKey) ?? false;
-  }
-
-  bool _matchesAudience(GuideAudience audience, bool isNewUser) {
-    switch (audience) {
-      case GuideAudience.all:
-        return true;
-      case GuideAudience.newUser:
-        return isNewUser;
-      case GuideAudience.returningUser:
-        return !isNewUser;
-    }
-  }
-
   /// Get guides that start on a given screen, sorted by priority.
   List<Guide> guidesForScreen(String screen) {
     return _guides.where((g) => g.startScreen == screen).toList()..sort((a, b) => a.priority.compareTo(b.priority));
@@ -100,14 +75,12 @@ class GuideService {
     return null;
   }
 
-  /// Get unseen guides that start on the given screen, filtered by audience, sorted by priority.
+  /// Get unseen guides that start on the given screen, sorted by priority.
   Future<List<Guide>> unseenForScreen(String screen) async {
     await _ensureState();
     final screenGuides = guidesForScreen(screen);
-    final newUser = await isNewUser();
     final unseen = <Guide>[];
     for (final guide in screenGuides) {
-      if (!_matchesAudience(guide.audience, newUser)) continue;
       if (!await hasSeenGuide(guide.id)) {
         unseen.add(guide);
       }
