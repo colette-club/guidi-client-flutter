@@ -1,0 +1,12 @@
+name: guidi_client
+description: A Dart client for the Guidi guide tracking API.
+version: 0.1.0
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  http: ^1.2.0
+
+dev_dependencies:
+  test: ^1.24.0
