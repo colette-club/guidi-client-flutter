@@ -25,6 +25,7 @@ class GuidiClient {
             completedSteps
             totalSteps
             skipped
+            notApplicable
             completedAt
           }
         }
@@ -49,6 +50,7 @@ class GuidiClient {
             completedSteps
             totalSteps
             skipped
+            notApplicable
             completedAt
           }
         }
@@ -76,6 +78,7 @@ class GuidiClient {
             completedSteps
             totalSteps
             skipped
+            notApplicable
             completedAt
           }
         }
@@ -94,6 +97,7 @@ class GuidiClient {
             completedSteps
             totalSteps
             skipped
+            notApplicable
             completedAt
           }
         }
@@ -101,6 +105,28 @@ class GuidiClient {
     ''';
     final data = await _request(query, {'userId': userId});
     return GuideState.fromJson(data['resetAllGuides'] as Map<String, dynamic>);
+  }
+
+  Future<GuideState> markGuideNotApplicable({
+    required String userId,
+    required String guideId,
+  }) async {
+    const query = '''
+      mutation MarkGuideNotApplicable(\$userId: String!, \$guideId: String!) {
+        markGuideNotApplicable(userId: \$userId, guideId: \$guideId) {
+          guides {
+            guideId
+            completedSteps
+            totalSteps
+            skipped
+            notApplicable
+            completedAt
+          }
+        }
+      }
+    ''';
+    final data = await _request(query, {'userId': userId, 'guideId': guideId});
+    return GuideState.fromJson(data['markGuideNotApplicable'] as Map<String, dynamic>);
   }
 
   Future<Map<String, dynamic>> _request(String query, Map<String, dynamic> variables) async {

@@ -14,6 +14,7 @@ class GuidePlayerTheme {
   final String skipLabel;
   final String nextLabel;
   final String doneLabel;
+  final double? tooltipMaxWidth;
 
   const GuidePlayerTheme({
     this.overlayColor = const Color(0xFF1B3A2D),
@@ -25,6 +26,7 @@ class GuidePlayerTheme {
     this.skipLabel = 'Skip',
     this.nextLabel = 'Next',
     this.doneLabel = 'Done',
+    this.tooltipMaxWidth,
   });
 }
 
@@ -198,9 +200,12 @@ class _GuideTooltip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final tooltip = Container(
       padding: const EdgeInsets.all(16),
       margin: const EdgeInsets.symmetric(horizontal: 16),
+      constraints: theme.tooltipMaxWidth != null
+          ? BoxConstraints(maxWidth: theme.tooltipMaxWidth!)
+          : null,
       decoration: BoxDecoration(
         color: theme.tooltipBackground,
         borderRadius: BorderRadius.circular(12),
@@ -254,5 +259,13 @@ class _GuideTooltip extends StatelessWidget {
         ],
       ),
     );
+
+    if (theme.tooltipMaxWidth != null) {
+      return Align(
+        alignment: Alignment.center,
+        child: tooltip,
+      );
+    }
+    return tooltip;
   }
 }

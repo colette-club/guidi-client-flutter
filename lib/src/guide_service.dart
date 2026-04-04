@@ -52,6 +52,13 @@ class GuideService {
     } catch (_) {}
   }
 
+  Future<void> markGuideNotApplicable(String guideId) async {
+    if (_userId == null) return;
+    try {
+      _cachedState = await _client.markGuideNotApplicable(userId: _userId!, guideId: guideId);
+    } catch (_) {}
+  }
+
   Future<void> resetGuide(String guideId) async {
     if (_userId == null) return;
     try {
