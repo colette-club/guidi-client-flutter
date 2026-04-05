@@ -102,10 +102,28 @@ class GuidePlayer {
     final groupStepOffset = guide.stepOffsetForGroup(groupIndex);
     _currentStepIndex = groupStepOffset + stepOffset;
 
+    final screenHeight = MediaQuery.of(context).size.height;
+
     final targets = stepsToShow.asMap().entries.map((entry) {
       final visibleIndex = entry.key;
       final step = entry.value.value;
       final isLastStep = isLastGroup && visibleIndex == stepsToShow.length - 1 && !step.tapThrough;
+
+      // If target takes more than 1/3 of the screen and content is top-aligned,
+      // use custom positioning to guarantee tooltip gets enough space
+      var contentAlign = step.contentAlign;
+      CustomTargetContentPosition? customPosition;
+      final targetCtx = step.targetKey.currentContext;
+      if (contentAlign == ContentAlign.top && targetCtx != null) {
+        final renderBox = targetCtx.findRenderObject() as RenderBox?;
+        if (renderBox != null && renderBox.hasSize) {
+          final targetHeight = renderBox.size.height;
+          if (targetHeight > screenHeight / 3) {
+            contentAlign = ContentAlign.custom;
+            customPosition = CustomTargetContentPosition(top: 16);
+          }
+        }
+      }
 
       return TargetFocus(
         identify: step.titleResolver(l10n),
@@ -116,7 +134,8 @@ class GuidePlayer {
         paddingFocus: 8,
         contents: [
           TargetContent(
-            align: step.contentAlign,
+            align: contentAlign,
+            customPosition: customPosition,
             child: _GuideTooltip(
               title: step.titleResolver(l10n),
               description: step.descResolver(l10n),
