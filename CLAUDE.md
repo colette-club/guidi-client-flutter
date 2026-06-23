@@ -46,6 +46,6 @@ There is no `l10n` in this package — user-facing strings are supplied by the h
 
 All Dart/Flutter coding conventions — cubit architecture and state shape, error handling, repos & GraphQL, models & enums, screens & widgets, components, routing/theme, localization, testing, and DI — live in the **`flutter-conventions-guide`** skill, shared across our Flutter apps via the `colette-club` plugin marketplace (`flutter-conventions-guide@colette-club`).
 
-It is the authoritative source for "how to write code here" and auto-triggers when editing any `.dart`/`.arb` file. Consult it (and its `reference.md` for full templates) before writing or editing code. (If the skill does not appear, enable the plugin via `"enabledPlugins": { "flutter-conventions-guide@colette-club": true }`.)
+**Before writing or editing ANY `.dart`/`.arb` file, you MUST first load this skill** by invoking the Skill tool with `flutter-conventions-guide:flutter-conventions-guide`. Do NOT rely on file-pattern auto-activation — it does not reliably surface a reminder; invoke the skill yourself at the start of any Flutter work. It is the authoritative source for "how to write code here" (see its `reference.md` for full templates). (If the skill is unavailable, enable the plugin via `"enabledPlugins": { "flutter-conventions-guide@colette-club": true }`, or read it from the plugin cache at `~/.claude/plugins/cache/colette-club/flutter-conventions-guide/0.1.0/skills/flutter-conventions-guide/SKILL.md`.)
 
 Do NOT re-document coding conventions yourself — that's what the pointer is for.
