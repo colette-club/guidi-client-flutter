@@ -300,11 +300,12 @@ class _GuideTooltip extends StatelessWidget {
   }
 }
 
-/// The always-visible "Skip" pill pinned to the guide overlay's corner.
-/// TutorialCoachMark wraps it in its own tap handler (`onClickSkip` → `skip`),
-/// so this widget is purely visual — it just needs to be legible on any
-/// background. It guarantees an escape hatch even if a step's tooltip lands
-/// off-screen.
+/// The always-visible skip control pinned to the guide overlay's top-right
+/// corner — a small, unobtrusive close (X) icon so it stays out of the way of
+/// the tooltip and the highlighted target. TutorialCoachMark wraps it in its
+/// own tap handler (`onClickSkip` → `skip`), so this widget is purely visual.
+/// It guarantees an escape hatch even if a step's tooltip lands off-screen.
+/// Keyed for tests; carries a semantic label for accessibility.
 class _PinnedSkip extends StatelessWidget {
   final GuidePlayerTheme theme;
 
@@ -313,26 +314,27 @@ class _PinnedSkip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(8),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
+        key: const Key('guide_skip_button'),
+        width: 34,
+        height: 34,
         decoration: BoxDecoration(
           color: theme.tooltipBackground,
-          borderRadius: BorderRadius.circular(20),
+          shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.2),
-              blurRadius: 8,
+              blurRadius: 6,
               offset: const Offset(0, 2),
             ),
           ],
         ),
-        child: Text(
-          theme.skipLabel,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: theme.primaryColor,
-                fontWeight: FontWeight.w600,
-              ),
+        child: Icon(
+          Icons.close,
+          size: 18,
+          color: theme.primaryColor,
+          semanticLabel: theme.skipLabel,
         ),
       ),
     );
