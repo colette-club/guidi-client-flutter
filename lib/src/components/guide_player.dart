@@ -83,7 +83,9 @@ class GuidePlayer {
       final ctx = currentGroup[i].targetKey.currentContext;
       if (ctx != null) {
         final renderObject = ctx.findRenderObject();
-        if (renderObject is RenderBox && renderObject.hasSize && renderObject.size.isFinite) {
+        if (renderObject is RenderBox &&
+            renderObject.hasSize &&
+            renderObject.size.isFinite) {
           final position = renderObject.localToGlobal(Offset.zero);
           if (position.dx.isFinite && position.dy.isFinite) {
             visibleSteps.add(MapEntry(i, currentGroup[i]));
@@ -107,7 +109,9 @@ class GuidePlayer {
     final targets = stepsToShow.asMap().entries.map((entry) {
       final visibleIndex = entry.key;
       final step = entry.value.value;
-      final isLastStep = isLastGroup && visibleIndex == stepsToShow.length - 1 && !step.tapThrough;
+      final isLastStep = isLastGroup &&
+          visibleIndex == stepsToShow.length - 1 &&
+          !step.tapThrough;
 
       // If target takes more than 1/3 of the screen and content is top-aligned,
       // use custom positioning to guarantee tooltip gets enough space
@@ -128,7 +132,7 @@ class GuidePlayer {
       return TargetFocus(
         identify: step.titleResolver(l10n),
         keyTarget: step.targetKey,
-        alignSkip: Alignment.bottomRight,
+        alignSkip: Alignment.topRight,
         shape: ShapeLightFocus.RRect,
         radius: 12,
         paddingFocus: 8,
@@ -148,7 +152,8 @@ class GuidePlayer {
                   onTapThrough!(stepOffset + visibleIndex);
                   return;
                 }
-                _currentStepIndex = groupStepOffset + stepOffset + visibleIndex + 1;
+                _currentStepIndex =
+                    groupStepOffset + stepOffset + visibleIndex + 1;
                 _tutorialCoachMark.next();
                 // Scroll to next target after overlay animation
                 if (visibleIndex + 1 < stepsToShow.length) {
@@ -164,9 +169,6 @@ class GuidePlayer {
                   });
                 }
               },
-              onSkip: () {
-                _tutorialCoachMark.skip();
-              },
             ),
           ),
         ],
@@ -177,7 +179,14 @@ class GuidePlayer {
       targets: targets,
       colorShadow: theme.overlayColor,
       opacityShadow: theme.overlayOpacity,
-      hideSkip: true,
+      // A fixed "Skip" pill pinned to the top-right (safe-area aware), shown on
+      // every step. It's the guaranteed escape hatch: even if a step's tooltip
+      // ends up off-screen, the user can always cancel the guide from here
+      // rather than being stuck and force-quitting the app.
+      hideSkip: false,
+      showSkipInLastTarget: true,
+      alignSkip: Alignment.topRight,
+      skipWidget: _PinnedSkip(theme: theme),
       onFinish: () {
         if (_tapThroughFired || _skipFired) return;
         final lastStep = stepsToShow.last.value;
@@ -204,7 +213,6 @@ class _GuideTooltip extends StatelessWidget {
   final String title;
   final String description;
   final VoidCallback onNext;
-  final VoidCallback onSkip;
   final bool isLast;
   final GuidePlayerTheme theme;
 
@@ -212,7 +220,6 @@ class _GuideTooltip extends StatelessWidget {
     required this.title,
     required this.description,
     required this.onNext,
-    required this.onSkip,
     required this.theme,
     this.isLast = false,
   });
@@ -242,35 +249,39 @@ class _GuideTooltip extends StatelessWidget {
         children: [
           Text(
             title,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+            style: Theme.of(context)
+                .textTheme
+                .headlineSmall
+                ?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Text(
             description,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: theme.subtleTextColor, height: 1.4),
+            style: Theme.of(context)
+                .textTheme
+                .bodyMedium
+                ?.copyWith(color: theme.subtleTextColor, height: 1.4),
           ),
           const SizedBox(height: 16),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              TextButton(
-                onPressed: onSkip,
-                child: Text(
-                  theme.skipLabel,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: theme.subtleTextColor),
-                ),
-              ),
               ElevatedButton(
                 onPressed: onNext,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: theme.primaryColor,
                   foregroundColor: theme.primaryTextColor,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(24)),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 ),
                 child: Text(
                   isLast ? theme.doneLabel : theme.nextLabel,
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(color: theme.primaryTextColor),
+                  style: Theme.of(context)
+                      .textTheme
+                      .labelLarge
+                      ?.copyWith(color: theme.primaryTextColor),
                 ),
               ),
             ],
@@ -286,5 +297,44 @@ class _GuideTooltip extends StatelessWidget {
       );
     }
     return tooltip;
+  }
+}
+
+/// The always-visible "Skip" pill pinned to the guide overlay's corner.
+/// TutorialCoachMark wraps it in its own tap handler (`onClickSkip` → `skip`),
+/// so this widget is purely visual — it just needs to be legible on any
+/// background. It guarantees an escape hatch even if a step's tooltip lands
+/// off-screen.
+class _PinnedSkip extends StatelessWidget {
+  final GuidePlayerTheme theme;
+
+  const _PinnedSkip({required this.theme});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
+        decoration: BoxDecoration(
+          color: theme.tooltipBackground,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.2),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Text(
+          theme.skipLabel,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: theme.primaryColor,
+                fontWeight: FontWeight.w600,
+              ),
+        ),
+      ),
+    );
   }
 }
