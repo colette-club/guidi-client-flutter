@@ -1,6 +1,6 @@
 name: guidi_client
 description: Flutter toolkit for the Guidi guide tracking API. Includes API client, guide models, service layer, and coach mark UI.
-version: 0.2.0
+version: 0.3.0
 
 environment:
   sdk: ">=3.0.0 <4.0.0"

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
@@ -46,6 +48,14 @@ class GuidePlayer {
   /// (e.g. open a bottom sheet) and then resume with an incremented [stepOffset].
   final void Function(int stepIndex)? onTapThrough;
 
+  /// Asked while the guide shows. Once it returns false, for instance because another screen covers the
+  /// guide's screen or another tab is selected, the guide is taken down without finishing or skipping it,
+  /// and [onInterrupted] is called.
+  final bool Function()? isScreenVisible;
+
+  /// Called after [isScreenVisible] took the guide down, so the caller can play it again later.
+  final VoidCallback? onInterrupted;
+
   /// Localization object passed to guide step resolvers.
   final dynamic l10n;
 
@@ -55,7 +65,13 @@ class GuidePlayer {
   late TutorialCoachMark _tutorialCoachMark;
   bool _tapThroughFired = false;
   bool _skipFired = false;
+  bool _shown = false;
+  bool _interrupted = false;
   int _currentStepIndex = 0;
+  Timer? _visibilityWatch;
+
+  /// How often [isScreenVisible] is asked while the guide shows.
+  static const Duration _visibilityCheckInterval = Duration(milliseconds: 100);
 
   GuidePlayer({
     required this.context,
@@ -66,6 +82,8 @@ class GuidePlayer {
     this.onGroupFinished,
     this.onSkip,
     this.onTapThrough,
+    this.isScreenVisible,
+    this.onInterrupted,
     this.theme = const GuidePlayerTheme(),
   });
 
@@ -155,19 +173,6 @@ class GuidePlayer {
                 _currentStepIndex =
                     groupStepOffset + stepOffset + visibleIndex + 1;
                 _tutorialCoachMark.next();
-                // Scroll to next target after overlay animation
-                if (visibleIndex + 1 < stepsToShow.length) {
-                  final nextStep = stepsToShow[visibleIndex + 1].value;
-                  Future.delayed(const Duration(milliseconds: 400), () {
-                    if (nextStep.targetKey.currentContext != null) {
-                      Scrollable.ensureVisible(
-                        nextStep.targetKey.currentContext!,
-                        duration: const Duration(milliseconds: 300),
-                        alignment: 0.3,
-                      );
-                    }
-                  });
-                }
               },
             ),
           ),
@@ -187,7 +192,9 @@ class GuidePlayer {
       showSkipInLastTarget: true,
       alignSkip: Alignment.topRight,
       skipWidget: _PinnedSkip(theme: theme),
+      beforeFocus: _scrollIntoView,
       onFinish: () {
+        _visibilityWatch?.cancel();
         if (_tapThroughFired || _skipFired) return;
         final lastStep = stepsToShow.last.value;
         if (lastStep.tapThrough && onTapThrough != null) {
@@ -197,14 +204,56 @@ class GuidePlayer {
         onGroupFinished?.call();
       },
       onSkip: () {
+        _visibilityWatch?.cancel();
         _skipFired = true;
         onSkip?.call(_currentStepIndex);
         return true;
       },
     );
 
+    _shown = true;
     _tutorialCoachMark.show(context: context, rootOverlay: true);
+    _watchVisibility();
     return true;
+  }
+
+  /// Takes the guide down without finishing or skipping it, for instance when
+  /// its screen goes away. Does nothing for a guide that never showed.
+  void cancel() {
+    _visibilityWatch?.cancel();
+    if (!_shown || _interrupted) return;
+    _interrupted = true;
+    _tutorialCoachMark.removeOverlayEntry();
+  }
+
+  /// Scrolls a step's target into view and waits for the scroll to end, so the coach mark measures the
+  /// target where it comes to rest. Runs before every step, the first one included.
+  Future<void> _scrollIntoView(TargetFocus target) async {
+    // A guide taken down leaves its screen where it is, and its coach mark's
+    // focus, disposed by now, must never go on to measure and animate.
+    if (_interrupted) return Completer<void>().future;
+
+    final BuildContext? targetContext = target.keyTarget?.currentContext;
+    if (targetContext != null && targetContext.mounted) {
+      await Scrollable.ensureVisible(
+        targetContext,
+        duration: const Duration(milliseconds: 300),
+        alignment: 0.3,
+      );
+    }
+    // Taken down while it scrolled.
+    if (_interrupted) return Completer<void>().future;
+  }
+
+  void _watchVisibility() {
+    final isScreenVisible = this.isScreenVisible;
+    if (isScreenVisible == null) return;
+
+    _visibilityWatch = Timer.periodic(_visibilityCheckInterval, (timer) {
+      if (isScreenVisible()) return;
+      cancel();
+      onInterrupted?.call();
+    });
   }
 }
 
